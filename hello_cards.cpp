@@ -2,9 +2,11 @@
 #include <curses.h>
 #include <signal.h>
 #include <unistd.h>
-#include <vector>
+#include <array>
 #include <memory>
 #include <functional>
+#include <cstring>
+#include <utility>
 
 static void finish(int sig);
 
@@ -21,6 +23,50 @@ auto CreateWindow (int max_x, int max_y, int x=0, int y=0)
 enum Suit {HEARTS,DIAMONDS,SPADES,CLUBS};
 
 static const int bigCardWidth=15, bigCardHeight=9;
+
+
+auto TenCard()
+{
+   auto width = 15, height = 9;
+   auto pat = {"x   x",
+               "  x  ",
+               "x   x",
+               "     ",
+               "x   x",
+               "  x  ",
+               "x   x"};
+
+   auto patStartRow = 1;
+   auto patStartCol = 5;
+
+   auto num = "10";
+   const char suit[] = "\xE2\x99\xA5";
+
+   auto topLeft = std::make_pair(0,0);
+   auto bottomRight = std::make_pair(height-1, width-std::strlen(num));
+
+   auto w = CreateWindow(height, width);
+
+   //Add numbers
+   mvwaddstr(w.get(), topLeft.first,topLeft.second, num);
+   mvwaddstr(w.get(), bottomRight.first, bottomRight.second, num);
+
+   //Add pattern
+   auto row = 0;
+   for (auto line : pat) {
+      for (size_t col=0;col<std::strlen(line);col++) {
+         if (line[col] == 'x') mvwaddstr(w.get(), row+patStartRow, col+patStartCol, suit);
+      }
+      row++;
+   }
+   
+   return w;
+}
+
+
+
+
+
 
 auto CreateCard()
 {
@@ -111,6 +157,12 @@ main(__attribute__((unused)) int argc, __attribute__((unused)) char *argv[])
     wbkgd(card2.get(), COLOR_PAIR(BLACK_ON_WHITE));
     mvwin( card2.get(), 1, bigCardWidth+2);
     wrefresh(card2.get());
+    
+    auto card3 = TenCard();
+
+    wbkgd(card3.get(), COLOR_PAIR(RED_ON_WHITE));
+    mvwin(card3.get(), 1, bigCardWidth + 2 + 4 +2);
+    wrefresh(card3.get());
 
     getch();
 
